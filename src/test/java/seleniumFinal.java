@@ -40,24 +40,35 @@ public class seleniumFinal {
 
         //Select the first movie in the returned list and click on ‘ყიდვა’ button
         List<WebElement> allMovies = driver.findElements(By.cssSelector("div.movies-deal"));
-        //clicking on the first one
-        WebElement firstMovie = allMovies.get(0);
-        firstMovie.click();
-
-
-        //Scroll vertically (if necessary), and horizontally and choose ‘კავეა ისთ ფოინთი’
-        WebElement linkElement = driver.findElement(By.xpath("//a[text()='კავეა ისთ ფოინთი']"));
-        // თუ საჭირო გახდა სქროლი რომ ისთ ფოინთი ვიპოვოთ (Header მიშლიდა ამიტომაც scrollBy გამოყენებაც მომიწია)
         int yOffset = -100;
-        js.executeScript("arguments[0].scrollIntoView(); window.scrollBy(0, arguments[1]);", linkElement, yOffset);
-        linkElement.click();
+        //clicking on the first one ( თუ კავეა ისთ ფოინთი არის )
+        for (int i = 0; i < allMovies.size(); i++) {
+            // stale Error რომ ავიცილო
+            List<WebElement> refreshedMovies = driver.findElements(By.cssSelector("div.movies-deal"));
+            WebElement movie = refreshedMovies.get(i);
+            String nameOfTheMovie = movie.getText();
+            movie.click();
+
+            try {
+                //Scroll vertically (if necessary), and horizontally and choose ‘კავეა ისთ ფოინთი’
+                WebElement linkElement = driver.findElement(By.xpath("//a[text()='კავეა ისთ ფოინთი']"));
+                // თუ საჭირო გახდა სქროლი რომ ისთ ფოინთი ვიპოვოთ (Header მიშლიდა ამიტომაც scrollBy გამოყენებაც მომიწია)
+                js.executeScript("arguments[0].scrollIntoView(); window.scrollBy(0, arguments[1]);", linkElement, yOffset);
+                linkElement.click();
+                break; // Found and clicked on the desired link, exit the loop
+            } catch (NoSuchElementException e) {
+                // 'კავეა ისთ ფოინთი' link not found, continue to the next movie
+                System.out.println("ეს კინო: " + nameOfTheMovie + ", არ გადის კავეა ისთ ფოინთში");
+                driver.navigate().back();
+
+            }
+        }
 
 
         // Check that only ‘კავეა ისთ ფოინთი’ options are returned
         List<WebElement> elements = driver.findElements(By.xpath("//div[@id='384933']//div[@class='seanse-details ui-tabs-panel ui-widget-content ui-corner-bottom']//p[@class='cinema-title' and text()='კავეა ისთ ფოინთი']"));
         for (int i = 0; i < elements.size(); i++) {
             String elementText = (String) js.executeScript("return arguments[0].textContent;", elements.get(i));
-            System.out.println(elementText);
             Assert.assertEquals("კავეა ისთ ფოინთი", elementText);
         }
 
@@ -70,6 +81,7 @@ public class seleniumFinal {
         //click on last option
         WebElement lastElement = elements.get(elements.size() - 1);
         lastElement.click();
+
 
         // collecting movie name, cinema and date for future task
         String lastDateString = lastDate.getText();
